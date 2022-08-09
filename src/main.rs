@@ -1,11 +1,15 @@
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::thread;
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle_client(mut stream: TcpStream) {
     let mut data = [0; 128];
+    stream
+        .set_read_timeout(None)
+        .expect("set_read_timeout call failed");
     while match stream.read(&mut data) {
         Ok(_) => {
-            stream.write(b"+PONG").unwrap();
+            stream.write_all(b"+PONG\r\n").unwrap();
             true
         }
         Err(_) => {
@@ -22,15 +26,12 @@ fn handle_connection(mut stream: TcpStream) {
 }
 
 fn main() {
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    println!("Logs from your program will appear here!");
-
-    // Uncomment this block to pass the first stage
-    // let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
     let listener = TcpListener::bind("127.0.0.1:6379").expect("could not bind to port");
     for stream_result in listener.incoming() {
         match stream_result {
-            Ok(stream) => handle_connection(stream),
+            Ok(stream) => {
+                thread::spawn(move || handle_client(stream));
+            }
             Err(e) => println!("couldn't accept client: {:?}", e),
         }
     }
