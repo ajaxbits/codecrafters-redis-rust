@@ -2,10 +2,11 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 
 fn handle_connection(mut stream: TcpStream) {
-    let mut data = [0 as u8; 50];
-    match stream.read(&mut data) {
+    let mut data = [0; 128];
+    while match stream.read(&mut data) {
         Ok(_) => {
             stream.write(b"+PONG").unwrap();
+            true
         }
         Err(_) => {
             println!(
@@ -15,8 +16,9 @@ fn handle_connection(mut stream: TcpStream) {
             stream
                 .shutdown(std::net::Shutdown::Both)
                 .expect("could not shutdown connection");
+            false
         }
-    }
+    } {}
 }
 
 fn main() {
