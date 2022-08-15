@@ -2,11 +2,10 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 
+mod resp;
+
 fn handle_client(mut stream: TcpStream) {
     let mut data = [0; 128];
-    stream
-        .set_read_timeout(None)
-        .expect("set_read_timeout call failed");
     while match stream.read(&mut data) {
         Ok(_) => {
             stream.write_all(b"+PONG\r\n").unwrap();
